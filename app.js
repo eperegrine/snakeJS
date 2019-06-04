@@ -3,24 +3,31 @@ var canvas;
 var ctx;
 
 const deltaTime = 1/60;
-const gridUnit = 50;
+const gridUnit = 20;
 
 class RenderObject {
   position = {x:0, y:0}
-  size = { width:50, height:50 }
+  size = { width:gridUnit, height:gridUnit }
   fillStyle = "blue"
+
+  inset = 0;
 
   render() {
     ctx.fillStyle = this.fillStyle;
-    ctx.fillRect(this.position.x, this.position.y, this.size.width, this.size.height);
+    ctx.fillRect(
+      this.position.x+this.inset/2, this.position.y+this.inset/2, 
+      this.size.width-this.inset, this.size.height-this.inset);
   }
 }
 
+function comparePosition(a, b) {
+  return a.x == b.x && a.y == b.y;
+}
+
 class Snake extends RenderObject {
-  position = {x:200, y:200}
-  size = { width:50, height:50 }
+  position = {x:240, y:240}
+  size = { width:gridUnit, height:gridUnit }
   direction = { x: 1, y: 0 }
-  speed = 1
   fillStyle = "green";
 
   interval = 1/4;
@@ -29,11 +36,21 @@ class Snake extends RenderObject {
   tail = []
 
   lastPosition = {x:150, y:200};
+  dead = false;
+  kill() {
+    this.position = this.lastPosition;
+    this.dead = true;
+    alert("DEAD");
+    this.direction = {x:0,y:0}
+  }
 
   update() {
     this.counter += deltaTime;
-    if (this.counter > this.interval) {
+    if (!this.dead && this.counter > this.interval) {
       this.lastPosition = {...this.position};
+      this.position.x += this.direction.x * gridUnit;
+      this.position.y += this.direction.y * gridUnit;
+
       this.counter = 0;
       for (var i = this.tail.length-1; i >= 0; i--) {
         if (i > 0) {
@@ -41,10 +58,11 @@ class Snake extends RenderObject {
         } else {
           this.tail[i].position = this.lastPosition;
         }
+        if (comparePosition(this.tail[i].position, this.position)) {
+          this.kill();
+          break;
+        }
       }
-
-      this.position.x += this.direction.x * gridUnit;
-      this.position.y += this.direction.y * gridUnit;
     }
 
     this.render();
@@ -55,6 +73,7 @@ class Snake extends RenderObject {
 
   addTail() {
     var newTail = new RenderObject();
+    newTail.inset = 4;
     if (this.tail.length > 0) {
       newTail.position = this.tail[this.tail.length - 1].position
     } else {
@@ -111,9 +130,6 @@ function render() {
   ctx.globalAlpha = 0.5;
   ctx.fillRect(0,0,canvas.width,canvas.height);
   ctx.globalAlpha = 1;
-
-  ctx.fillStyle = "red";
-  ctx.fillRect(0, 0, 50, 50);
 
   snake.update();
 
