@@ -24,6 +24,17 @@ function comparePosition(a, b) {
   return a.x == b.x && a.y == b.y;
 }
 
+var foodPosition = {x: 300, y:240};
+
+function nearestN(n = 20, x) {
+  return Math.ceil(x/n)*n;
+}
+
+function bitFood () {
+  foodPosition.x = nearestN(gridUnit, Math.random() * canvas.width);
+  foodPosition.y = nearestN(gridUnit, Math.random() * canvas.height);
+}
+
 class Snake extends RenderObject {
   position = {x:240, y:240}
   size = { width:gridUnit, height:gridUnit }
@@ -62,6 +73,16 @@ class Snake extends RenderObject {
           this.kill();
           break;
         }
+      }
+
+      if (this.position.x < 0 || this.position.x >= canvas.width || 
+        this.position.y < 0 || this.position.y >= canvas.height) {
+        this.kill();
+      }
+
+      if (comparePosition(foodPosition, this.position)) {
+        this.addTail();
+        bitFood();
       }
     }
 
@@ -132,6 +153,9 @@ function render() {
   ctx.globalAlpha = 1;
 
   snake.update();
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(foodPosition.x, foodPosition.y, gridUnit, gridUnit);
 
   requestAnimationFrame(render);
 }
